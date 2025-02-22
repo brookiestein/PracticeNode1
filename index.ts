@@ -8,19 +8,19 @@ let contacts = [
         "id": 1,
         "name": "Pepito Pérez",
         "phone": "000-000-0000",
-        "email": "pepito@salzarcodes.com"
+        "email": "pepito@salazarcodes.com"
     },
     {
         "id": 2,
         "name": "Stephanye D' Pérez",
         "phone": "123-456-7890",
-        "email": "stephanye@salzarcodes.com"
+        "email": "stephanye@salazarcodes.com"
     },
     {
         "id": 3,
         "name": "Nieves O.",
         "phone": "789-123-4567",
-        "email": "nieves@salzarcodes.com"
+        "email": "nieves@salazarcodes.com"
     }
 ];
 
@@ -44,17 +44,7 @@ app.param("id", (request, response, next, id) => {
 });
 
 app.get("/contacts", (request, response) => {
-    let c = [];
-    for (const contact of contacts) {
-        c.push({
-            "id": contact.id,
-            "name": contact.name,
-            "phone": contact.phone,
-            "email": contact.email
-        });
-    }
-
-    response.json(c);
+    response.json(contacts);
 });
 
 app.get("/contact/:id", (request, response) => {
