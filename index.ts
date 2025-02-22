@@ -1,3 +1,5 @@
+import Response from "express";
+
 const createError = require("http-errors");
 const path = require("path");
 const bodyParser = require("body-parser");
@@ -34,6 +36,43 @@ const isEmailValid = (email: string): boolean => {
 const isPhoneValid = (phone: string): boolean => {
     const regex = /\d{3}-?\d{3}-?\d{4}/;
     return regex.test(phone);
+};
+
+const canAdd = (name: string, phone: string, email: string, response: Response): boolean => {
+    if (!name) {
+        response.json({error: "Name was not specified."});
+        return false;
+    }
+
+    if (!phone) {
+        response.json({error: "Phone was not specified."});
+        return false;
+    } else if (!isPhoneValid(phone)) {
+        response.json({error: `Phone: ${phone} is not valid.`});
+        return false;
+    }
+
+    if (!email) {
+        response.json({error: "Email was not specified."});
+        return false;
+    } else if (!isEmailValid(email)) {
+        response.json({error: `Email ${email} is not valid.`});
+        return false;
+    }
+
+    let found = contacts.find((contact) => contact.name === name);
+    if (found) {
+        response.json({error: `Contact: ${name} already exists.`});
+        return false;
+    }
+
+    found = contacts.find((contact) => contact.email === email);
+    if (found) {
+        response.json({error: `Email: ${email} is already in use.`});
+        return false;
+    }
+
+    return true;
 };
 
 app.use(bodyParser.json());
@@ -84,36 +123,7 @@ app.post("/add", (request, response) => {
         return;
     }
 
-    if (!request.body.name) {
-        response.json({error: "Name was not specified."});
-        return;
-    }
-
-    if (!request.body.phone) {
-        response.json({error: "Phone was not specified."});
-        return;
-    } else if (!isPhoneValid(request.body.phone)) {
-        response.json({error: `Phone: ${request.body.phone} is not valid.`});
-        return;
-    }
-
-    if (!request.body.email) {
-        response.json({error: "Email was not specified."});
-        return;
-    } else if (!isEmailValid(request.body.email)) {
-        response.json({error: `Email ${request.body.email} is not valid.`});
-        return;
-    }
-
-    let found = contacts.find((contact) => contact.name === request.body.name);
-    if (found) {
-        response.json({error: `Contact: ${request.body.name} already exists.`});
-        return;
-    }
-
-    found = contacts.find((contact) => contact.email === request.body.email);
-    if (found) {
-        response.json({error: `Email: ${request.body.email} is already in use.`});
+    if (!canAdd(request.body.name, request.body.phone, request.body.email, response)) {
         return;
     }
 
