@@ -1,7 +1,8 @@
 const createError = require("http-errors");
+const path = require("path");
 const express = require("express");
 const app = express();
-const port: number = 8000;
+const port: number = 8080;
 
 let contacts = [
     {
@@ -41,6 +42,11 @@ app.param("id", (request, response, next, id) => {
     }
 
     next();
+});
+
+app.get("/", (request, response) => {
+    const options = {root: path.join(__dirname)};
+    response.sendFile("index.html", options);
 });
 
 app.get("/contacts", (request, response) => {
