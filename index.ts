@@ -1,5 +1,6 @@
 const createError = require("http-errors");
 const path = require("path");
+const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const port: number = 8080;
@@ -24,6 +25,19 @@ let contacts = [
         "email": "nieves@salazarcodes.com"
     }
 ];
+
+const isEmailValid = (email: string): boolean => {
+    const regex = /\w.+@.+\.(|com|)/;
+    return regex.test(email);
+};
+
+const isPhoneValid = (phone: string): boolean => {
+    const regex = /\d{3}-?\d{3}-?\d{4}/;
+    return regex.test(phone);
+};
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.param("id", (request, response, next, id) => {
     if (typeof id === "undefined") {
@@ -62,6 +76,49 @@ app.get("/contact/:id", (request, response) => {
     };
 
     response.json(contact);
+});
+
+app.post("/add", (request, response) => {
+    if (!request.body) {
+        response.json({error: "No data was provided."});
+        return;
+    }
+
+    if (!request.body.name) {
+        response.json({error: "Name was not specified."});
+        return;
+    }
+
+    if (!request.body.phone) {
+        response.json({error: "Phone was not specified."});
+        return;
+    } else if (!isPhoneValid(request.body.phone)) {
+        response.json({error: `Phone: ${request.body.phone} is not valid.`});
+        return;
+    }
+
+    if (!request.body.email) {
+        response.json({error: "Email was not specified."});
+        return;
+    } else if (!isEmailValid(request.body.email)) {
+        response.json({error: `Email ${request.body.email} is not valid.`});
+        return;
+    }
+
+    const found = contacts.find((contact) => contact.name === request.body.name);
+    if (found) {
+        response.json({error: `Contact: ${request.body.name} already exists.`});
+        return;
+    }
+
+    contacts.push({
+        "id": contacts.length + 1,
+        "name": request.body.name,
+        "phone": request.body.phone,
+        "email": request.body.email
+    });
+
+    response.json({success: `Contact ID: ${contacts.length}`});
 });
 
 app.listen(port, () => {
