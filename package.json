@@ -1,0 +1,17 @@
+{
+  "name": "practicenode1",
+  "version": "1.0.0",
+  "description": "Practice with NodeJS 1, Module 3.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Brayan M. Salazar",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5"
+  }
+}
