@@ -34,7 +34,7 @@ const isEmailValid = (email: string): boolean => {
 };
 
 const isPhoneValid = (phone: string): boolean => {
-    const regex = /\d{3}-?\d{3}-?\d{4}/;
+    const regex = /8(|0|2|4|)9-?\d{3}-?\d{4}/;
     return regex.test(phone);
 };
 
