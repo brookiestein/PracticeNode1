@@ -68,7 +68,7 @@ const canAdd = (name: string, phone: string, email: string, response: Response):
 
     found = contacts.find((contact) => contact.email === email);
     if (found) {
-        response.json({error: `Email: ${email} is already in use.`});
+        response.json({status: 400, error: `Email: ${email} is already in use.`});
         return false;
     }
 
