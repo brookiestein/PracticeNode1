@@ -105,9 +105,15 @@ app.post("/add", (request, response) => {
         return;
     }
 
-    const found = contacts.find((contact) => contact.name === request.body.name);
+    let found = contacts.find((contact) => contact.name === request.body.name);
     if (found) {
         response.json({error: `Contact: ${request.body.name} already exists.`});
+        return;
+    }
+
+    found = contacts.find((contact) => contact.email === request.body.email);
+    if (found) {
+        response.json({error: `Email: ${request.body.email} is already in use.`});
         return;
     }
 
