@@ -16,9 +16,9 @@ let contacts = [
     },
     {
         "id": 2,
-        "name": "Stephanye D' Pérez",
+        "name": "Miguelina D' Pérez",
         "phone": "123-456-7890",
-        "email": "stephanye@salazarcodes.com"
+        "email": "miguelina@salazarcodes.com"
     },
     {
         "id": 3,
@@ -73,6 +73,52 @@ const canAdd = (name: string, phone: string, email: string, response: Response):
     }
 
     return true;
+};
+
+/* First returned value indicates whether the value already exists
+ * meanthile the second one indicates whether the caller can continue.
+ * This second value is useful when, for example, a mandatory field wasn't
+ * specified.
+ */
+const exists = (request, response): [boolean, boolean] => {
+    switch (request.body.field)
+    {
+    case "name":
+        if (!request.body.name) {
+            response.json({status: 400, error: "New 'name' was not provided."});
+            return [false, false];
+        }
+
+        if (contacts.find((contact) => contact.name === request.body.name)) {
+            return [true, false];
+        }
+        break;
+    case "phone":
+        if (!request.body.phone) {
+            response.json({status: 400, error: "New 'phone' was not provided."});
+            return [false, false];
+        }
+
+        if (contacts.find((contact) => contact.phone === request.body.phone)) {
+            return [true, false];
+        }
+        break;
+    case "email":
+        if (!request.body.email) {
+            response.json({status: 400, error: "New 'email' was not provided."});
+            return [false, false];
+        }
+
+        if (contacts.find((contact) => contact.email === request.body.email)) {
+            return [true, false];
+        }
+        break;
+    default:
+        response.json({error: `No such field: ${request.body.field}.`});
+        return [false, false];
+    }
+
+    return [false, true];
 };
 
 app.use(bodyParser.json());
@@ -135,6 +181,79 @@ app.post("/add", (request, response) => {
     });
 
     response.json({success: `Contact ID: ${contacts.length}`});
+});
+
+app.put("/updateById", (request, response) => {
+    if (!request.body) {
+        response.json({status: 400, error: "No data was provided."});
+        return;
+    }
+
+    if (!request.body.field) {
+        response.json({status: 400, error: "Field to update was not provided."});
+        return;
+    }
+
+    if (!request.body.id) {
+        response.json({status: 400, error: "Contact ID was not provided."});
+        return;
+    }
+
+    const [found, canContinue] = exists(request, response);
+
+    if (found) {
+        response.json({
+            status: 400,
+            error: `Error updating contact #${request.body.id}. ${request.body.field} already in use.`
+        });
+        return;
+    } else if (!canContinue) {
+        return;
+    }
+
+    let id: number = parseInt(request.body.id);
+    if (typeof id === "undefined") {
+        response.json({status: 400, error: `ID: ${request.body.id} is not valid.`});
+        return;
+    }
+
+    --id;
+    if (id < 0) {
+        response.json({status: 400, error: `ID: ${request.body.id} is not valid.`});
+        return;
+    }
+
+    let res = {status: 200, message: ""};
+    switch (request.body.field)
+    {
+    case "name":
+        const oldUsername: string = contacts[id].name;
+        contacts[id].name = request.body.name;
+        res.message = `Old username: ${oldUsername}, new username: ${request.body.name}`;
+        break;
+    case "phone":
+        const oldPhone: string = contacts[id].phone;
+        const newPhone: string = request.body.phone;
+        if (!isPhoneValid(newPhone)) {
+            response.json({status: 400, error: `New phone: ${newPhone} is not valid.`});
+            return;
+        }
+        contacts[id].phone = newPhone;
+        res.message = `Old phone: ${oldPhone}, new phone: ${newPhone}`;
+        break;
+    case "email":
+        const oldEmail: string = contacts[id].email;
+        const newEmail: string = request.body.email;
+        if (!isEmailValid(newEmail)) {
+            response.json({status: 400, error: `New email: ${newEmail} is not valid.`});
+            return;
+        }
+        contacts[id].email = newEmail;
+        res.message = `Old email: ${oldEmail}, new email: ${newEmail}`;
+        break;
+    }
+
+    response.json(res);
 });
 
 app.listen(port, () => {
