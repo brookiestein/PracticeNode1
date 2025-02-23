@@ -12,19 +12,22 @@ let contacts = [
         "id": 1,
         "name": "Pepito Pérez",
         "phone": "000-000-0000",
-        "email": "pepito@salazarcodes.com"
+        "email": "pepito@salazarcodes.com",
+        "active": true,
     },
     {
         "id": 2,
         "name": "Miguelina D' Pérez",
         "phone": "123-456-7890",
-        "email": "miguelina@salazarcodes.com"
+        "email": "miguelina@salazarcodes.com",
+        "active": true,
     },
     {
         "id": 3,
         "name": "Nieves O.",
         "phone": "789-123-4567",
-        "email": "nieves@salazarcodes.com"
+        "email": "nieves@salazarcodes.com",
+        "active": true,
     }
 ];
 
@@ -149,10 +152,34 @@ app.get("/", (request, response) => {
 });
 
 app.get("/contacts", (request, response) => {
-    response.json(contacts);
+    if (request.body.all) {
+        response.json(contacts);
+        return;
+    }
+
+    /* Default to show just active contacts, i.e., not deleted ones. */
+    let c = [];
+    for (const contact of contacts) {
+        if (!contact.active) {
+            continue;
+        }
+
+        c.push(contact);
+    }
+
+    if (c.length <= 0) {
+        response.json({status: 500, error: "There are no contacts."});
+    } else {
+        response.json(c);
+    }
 });
 
 app.get("/contact/:id", (request, response) => {
+    if (!contacts[request.id].active) {
+        response.json({status: 404, error: `User: ${request.id} not found!`});
+        return;
+    }
+
     const contact = {
         "id": contacts[request.id].id,
         "name": contacts[request.id].name,
@@ -177,7 +204,8 @@ app.post("/add", (request, response) => {
         "id": contacts.length + 1,
         "name": request.body.name,
         "phone": request.body.phone,
-        "email": request.body.email
+        "email": request.body.email,
+        "active": true
     });
 
     response.json({success: `Contact ID: ${contacts.length}`});
@@ -223,6 +251,11 @@ app.put("/updateById", (request, response) => {
         return;
     }
 
+    if (!contacts[id].active) {
+        response.json({status: 404, error: `User: ${request.body.id} not found!`});
+        return;
+    }
+
     let res = {status: 200, message: ""};
     switch (request.body.field)
     {
@@ -254,6 +287,22 @@ app.put("/updateById", (request, response) => {
     }
 
     response.json(res);
+});
+
+app.delete("/delete", (request, response) => {
+    if (!request.body || !request.body.id) {
+        response.json({status: 400, error: "Contact ID was not provided."});
+        return;
+    }
+
+    let id = parseInt(request.body.id);
+    if (isNaN(id) || (--id) < 0 || !contacts[id].active) {
+        response.json({status: 400, error: `ID: ${request.body.id} is not valid.`});
+        return;
+    }
+
+    contacts[id].active = false;
+    response.json({status: 200, message: `User: ${request.body.id} successfully deleted.`});
 });
 
 app.listen(port, () => {
