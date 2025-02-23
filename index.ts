@@ -190,6 +190,27 @@ app.get("/contact/:id", (request, response) => {
     response.json(contact);
 });
 
+app.get("/contactName", (request, response) => {
+    if (!request.body || !request.body.name) {
+        response.json({status: 400, error: "Contact name is required."});
+        return;
+    }
+
+    let contactsFound = [];
+    for (const contact of contacts) {
+        if (contact.name === request.body.name) {
+            contactsFound.push(contact);
+        }
+    }
+
+    /* If not contacts were found, use the same object to indicate an error. */
+    if (contactsFound.length === 0) {
+        contactsFound.push({status: 404, error: `Contact: ${request.body.name} not found!`});
+    }
+
+    response.json(contactsFound);
+});
+
 app.post("/add", (request, response) => {
     if (!request.body) {
         response.json({error: "No data was provided."});
